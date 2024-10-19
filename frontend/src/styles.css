@@ -1,0 +1,32 @@
+/* src/styles.css */
+.header {
+    background-color: #007bff;
+    padding: 10px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .header nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 15px;
+  }
+  
+  .header nav a:hover {
+    text-decoration: underline;
+  }
+  
+  .logout-btn {
+    background-color: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .logout-btn:hover {
+    text-decoration: underline;
+  }
+  

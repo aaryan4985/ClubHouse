@@ -1,0 +1,30 @@
+.loader {
+    border: 8px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    border-top: 8px solid #ffcc00; /* Bright color for the top */
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin: auto; /* Center the loader */
+    display: block; /* Ensure it's a block element */
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Optional: Add a backdrop to enhance visibility */
+  .loader-container {
+    position: fixed; /* Fix the position to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex; /* Use flexbox for centering */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    z-index: 1000; /* Ensure it appears above other elements */
+  }
+  
