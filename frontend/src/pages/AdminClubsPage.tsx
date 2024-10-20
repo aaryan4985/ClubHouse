@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Spinner from '../components/Spinner'; // Adjust the path as necessary
 import { storage, db } from '../firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -12,7 +13,6 @@ interface Club {
   leadEmail: string;
   leadPhone: string;
   meetingSchedule: string;
-  membershipFee: string;
   requirements: string;
   socialMedia: {
     instagram?: string;
@@ -54,7 +54,6 @@ const AdminClubsPage: React.FC = () => {
   const [leadEmail, setLeadEmail] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
   const [meetingSchedule, setMeetingSchedule] = useState('');
-  const [membershipFee, setMembershipFee] = useState('');
   const [requirements, setRequirements] = useState('');
   const [instagram, setInstagram] = useState('');
   const [linkedin, setLinkedin] = useState('');
@@ -130,7 +129,6 @@ const AdminClubsPage: React.FC = () => {
     setLeadEmail('');
     setLeadPhone('');
     setMeetingSchedule('');
-    setMembershipFee('');
     setRequirements('');
     setInstagram('');
     setLinkedin('');
@@ -187,7 +185,6 @@ const AdminClubsPage: React.FC = () => {
             leadEmail,
             leadPhone,
             meetingSchedule,
-            membershipFee,
             requirements,
             socialMedia: {
                 instagram,
@@ -279,7 +276,6 @@ const AdminClubsPage: React.FC = () => {
     setLeadEmail(club.leadEmail);
     setLeadPhone(club.leadPhone);
     setMeetingSchedule(club.meetingSchedule);
-    setMembershipFee(club.membershipFee);
     setRequirements(club.requirements);
     setInstagram(club.socialMedia.instagram || '');
     setLinkedin(club.socialMedia.linkedin || '');
@@ -292,14 +288,14 @@ const AdminClubsPage: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold">Manage Clubs</h1>
+      <h1 className="text-2xl font-bold text-purple-600">Manage Clubs</h1>
       {feedback && <p className="text-green-500">{feedback}</p>}
       {loading ? (
-        <p>Loading...</p>
+        <Spinner />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-lg font-semibold mb-2">{editingClubId ? 'Edit Club' : 'Add New Club'}</h2>
+            <h2 className="text-lg font-semibold mb-2 text-pink-600">{editingClubId ? 'Edit Club' : 'Add New Club'}</h2>
             <form>
               <div className="mb-4">
                 <label className="block mb-1">Club Name <span className="text-red-500">*</span></label>
@@ -335,10 +331,6 @@ const AdminClubsPage: React.FC = () => {
                 <input type="text" value={meetingSchedule} onChange={(e) => setMeetingSchedule(e.target.value)} className="border rounded w-full p-2" />
               </div>
               <div className="mb-4">
-                <label className="block mb-1">Membership Fee</label>
-                <input type="text" value={membershipFee} onChange={(e) => setMembershipFee(e.target.value)} className="border rounded w-full p-2" />
-              </div>
-              <div className="mb-4">
                 <label className="block mb-1">Requirements</label>
                 <textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} className="border rounded w-full p-2" />
               </div>
@@ -367,7 +359,7 @@ const AdminClubsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="bg-blue-500 text-white rounded px-4 py-2 hover:bg-blue-700"
+                className="bg-pink-600 text-white rounded px-4 py-2 hover:bg-purple-600"
               >
                 {editingClubId ? 'Update Club' : 'Add Club'}
               </button>

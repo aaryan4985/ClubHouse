@@ -9,8 +9,8 @@ interface Event {
   description: string;
   rules: string;
   venue: string;
-  timing: string;
-  date: string;
+  timing: string; // Assuming this is a string that includes time info
+  date: string; // Use format 'YYYY-MM-DD' for date
   imagePath: string;
   imageUrl: string; // Added imageUrl property
 }
@@ -27,6 +27,7 @@ const AdminEventsPage: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -79,6 +80,29 @@ const AdminEventsPage: React.FC = () => {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      events.forEach(event => {
+        const eventDateTime = new Date(`${event.date}T${event.timing}`);
+        const timeDifference = eventDateTime.getTime() - now.getTime();
+
+        if (timeDifference > 0) {
+          setTimeLeft({
+            days: Math.floor(timeDifference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+            minutes: Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60)),
+            seconds: Math.floor((timeDifference % (1000 * 60)) / 1000),
+          });
+        } else {
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [events]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) {
@@ -238,124 +262,87 @@ const AdminEventsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Manage Events</h1>
-      {feedback && (
-        <div className={`p-4 mb-4 rounded ${feedback.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-          {feedback}
-        </div>
-      )}
-
-      <div className="bg-white p-6 rounded shadow mb-4">
-        <h2 className="text-xl font-semibold mb-4">{editingEventId ? 'Edit Event' : 'Add New Event'}</h2>
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Event Title"
-            value={eventTitle}
-            onChange={(e) => setEventTitle(e.target.value)}
-            className="block w-full p-2 border border-gray-300 rounded"
-          />
-          <textarea
-            placeholder="Event Description"
-            value={eventDescription}
-            onChange={(e) => setEventDescription(e.target.value)}
-            className="block w-full p-2 border border-gray-300 rounded"
-            rows={3}
-          />
-          <textarea
-            placeholder="Event Rules"
-            value={eventRules}
-            onChange={(e) => setEventRules(e.target.value)}
-            className="block w-full p-2 border border-gray-300 rounded"
-            rows={3}
-          />
-          <input
-            type="text"
-            placeholder="Event Venue"
-            value={eventVenue}
-            onChange={(e) => setEventVenue(e.target.value)}
-            className="block w-full p-2 border border-gray-300 rounded"
-          />
-          <input
-            type="text"
-            placeholder="Event Timing"
-            value={eventTiming}
-            onChange={(e) => setEventTiming(e.target.value)}
-            className="block w-full p-2 border border-gray-300 rounded"
-          />
-          <input
-            type="date"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-            className="block w-full p-2 border border-gray-300 rounded"
-          />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Event Image {!editingEventId && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="block w-full"
-            />
-            {editingEventId && !eventImage && (
-              <p className="text-sm text-gray-500 mt-1">
-                Leave empty to keep the existing image
-              </p>
-            )}
-          </div>
-          <div className="flex gap-4">
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-blue-300"
-            >
-              {loading ? 'Saving...' : (editingEventId ? 'Update Event' : 'Add Event')}
-            </button>
-            {editingEventId && (
-              <button
-                onClick={resetForm}
-                className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </div>
+    <div className="p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-4">Manage Events</h1>
+      {loading && <p>Loading...</p>}
+      {feedback && <p className="text-red-500">{feedback}</p>}
+      <div className="mb-4">
+        <input 
+          type="text" 
+          placeholder="Event Title" 
+          value={eventTitle} 
+          onChange={(e) => setEventTitle(e.target.value)} 
+          className="p-2 border rounded w-full"
+        />
+        <textarea 
+          placeholder="Event Description" 
+          value={eventDescription} 
+          onChange={(e) => setEventDescription(e.target.value)} 
+          className="p-2 border rounded w-full mt-2"
+        />
+        <textarea 
+          placeholder="Event Rules" 
+          value={eventRules} 
+          onChange={(e) => setEventRules(e.target.value)} 
+          className="p-2 border rounded w-full mt-2"
+        />
+        <input 
+          type="text" 
+          placeholder="Event Venue" 
+          value={eventVenue} 
+          onChange={(e) => setEventVenue(e.target.value)} 
+          className="p-2 border rounded w-full mt-2"
+        />
+        <input 
+          type="text" 
+          placeholder="Event Timing (e.g. 10:00 AM)" 
+          value={eventTiming} 
+          onChange={(e) => setEventTiming(e.target.value)} 
+          className="p-2 border rounded w-full mt-2"
+        />
+        <input 
+          type="date" 
+          value={eventDate} 
+          onChange={(e) => setEventDate(e.target.value)} 
+          className="p-2 border rounded w-full mt-2"
+        />
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={handleFileChange} 
+          className="mt-2"
+        />
+        <button 
+          onClick={handleSubmit} 
+          className="bg-blue-500 text-white p-2 rounded mt-2"
+        >
+          {editingEventId ? 'Update Event' : 'Add Event'}
+        </button>
       </div>
-
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Events List</h2>
-        {events.map((event) => (
-          <div key={event.id} className="bg-white p-4 rounded shadow flex items-center justify-between">
-            <div className="flex items-center flex-1">
-              <img 
-                src={event.imageUrl || '/placeholder-image.png'} 
-                alt={event.title} 
-                className="w-16 h-16 object-cover rounded mr-4"
-              />
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold">{event.title}</h3>
-                <p className="text-gray-600">{event.description}</p>
-                <div className="text-sm text-gray-500">
-                  <span className="mr-4">📍 {event.venue}</span>
-                  <span className="mr-4">🕒 {event.timing}</span>
-                  <span>📅 {event.date}</span>
-                </div>
-              </div>
+      <h2 className="text-xl font-bold mb-2">Events List</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {events.map(event => (
+          <div key={event.id} className="border rounded-lg overflow-hidden shadow-md p-4">
+            <img src={event.imageUrl} alt={event.title} className="w-full h-48 object-cover mb-2" />
+            <h3 className="font-bold text-lg">{event.title}</h3>
+            <p>{event.description}</p>
+            <p><strong>Venue:</strong> {event.venue}</p>
+            <p><strong>Rules:</strong> {event.rules}</p>
+            <p><strong>Date:</strong> {event.date} <strong>Time:</strong> {event.timing}</p>
+            <div className="text-sm text-gray-500">
+              <p>Countdown to event:</p>
+              <p>{timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex justify-between mt-4">
               <button 
-                onClick={() => handleEditEvent(event)}
-                className="text-blue-500 hover:underline px-3 py-1"
+                onClick={() => handleEditEvent(event)} 
+                className="bg-yellow-500 text-white p-1 rounded"
               >
                 Edit
               </button>
               <button 
-                onClick={() => handleDeleteEvent(event.id, event.imagePath)}
-                className="text-red-500 hover:underline px-3 py-1"
+                onClick={() => handleDeleteEvent(event.id, event.imagePath)} 
+                className="bg-red-500 text-white p-1 rounded"
               >
                 Delete
               </button>

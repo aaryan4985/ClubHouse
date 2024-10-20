@@ -59,6 +59,7 @@ const EventsPage: React.FC = () => {
           {events.map(event => (
             <EventCard
               key={event.id}
+              id={event.id}
               title={event.title}
               date={new Date(event.date).toLocaleDateString()}
               image={event.image || 'https://example.com/default-event-image.jpg'} // Default image URL

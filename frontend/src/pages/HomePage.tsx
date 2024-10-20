@@ -51,6 +51,7 @@ const HomePage: React.FC = () => {
             events.map(event => (
               <EventCard
                 key={event.id}
+                id={event.id} // Add the id prop
                 title={event.title}
                 date={event.date}
                 image={event.image}
@@ -74,6 +75,7 @@ const HomePage: React.FC = () => {
                 name={club.name}
                 description={club.description}
                 logo={club.logo || 'default-logo.png'}
+                clubId={club.id} // Pass clubId to ClubCard
               />
             ))
           ) : (
