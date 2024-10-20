@@ -5,7 +5,7 @@ import ClubCard from '../components/ClubCard';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig'; 
 import { Club } from '../types'; 
-import Chat from '../components/Chat'; // Import Chat component
+import Chat from '../components/Chat'; 
 import Spinner from '../components/Spinner';
 
 const ClubsPage: React.FC = () => {
@@ -13,8 +13,9 @@ const ClubsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null); // Error state
 
-  // Fetch clubs from Firestore
   const fetchClubs = async () => {
+    setLoading(true); // Set loading to true before fetching
+    setError(null); // Reset error state
     try {
       const clubsSnapshot = await getDocs(collection(db, 'clubs'));
       const fetchedClubs: Club[] = clubsSnapshot.docs.map(doc => {
@@ -27,52 +28,31 @@ const ClubsPage: React.FC = () => {
       console.error('Error fetching clubs:', error);
       setError('Failed to load clubs. Please try again later.'); // Set error message
     } finally {
-      setLoading(false);
+      setLoading(false); // Set loading to false after fetching
     }
   };
 
-  // useEffect to fetch clubs on component mount
   useEffect(() => {
     fetchClubs();
   }, []);
 
-  // Retry fetching clubs
   const handleRetry = () => {
-    setLoading(true);
-    setError(null);
     fetchClubs();
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="loader"></div> {/* Include your CSS loader here */}
-        <p className="text-center text-lg font-semibold text-gray-600 mt-4">
-          Loading clubs...
-        </p>
-      </div>
-    );
-  }
+  if (loading) return <Spinner />;
 
-  // Error state
-  if (error) {
-    return (
-      <div className="text-center mt-10">
-        <p className="text-red-500 text-xl">{error}</p>
-        <button 
-          onClick={handleRetry} 
-          className="mt-4 bg-yellow-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-yellow-400 transition duration-300"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return <Spinner />;
-  }
+  if (error) return (
+    <div className="text-center mt-10">
+      <p className="text-red-500 text-xl">{error}</p>
+      <button 
+        onClick={handleRetry} 
+        className="mt-4 bg-yellow-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-yellow-400 transition duration-300"
+      >
+        Retry
+      </button>
+    </div>
+  );
 
   return (
     <Layout>
@@ -88,7 +68,7 @@ const ClubsPage: React.FC = () => {
                 key={club.id}
                 name={club.name}
                 description={club.description}
-                logo={club.logo || 'default-logo-url'} // Provide a default logo URL
+                logo={club.logo || 'https://example.com/default-logo-url'} // Default logo URL
               />
             ))}
           </div>
@@ -104,7 +84,6 @@ const ClubsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Chat component for real-time communication */}
         <div className="mt-12">
           <h3 className="text-3xl font-bold text-center text-gray-700 mb-4">
             Join the Conversation

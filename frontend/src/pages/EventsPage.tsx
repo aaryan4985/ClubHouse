@@ -38,7 +38,7 @@ const EventsPage: React.FC = () => {
   };
 
   if (loading) return <Spinner />;
-  
+
   if (error) return (
     <div className="text-center mt-10">
       <p className="text-red-500 text-lg">{error}</p>
@@ -61,7 +61,7 @@ const EventsPage: React.FC = () => {
               key={event.id}
               title={event.title}
               date={new Date(event.date).toLocaleDateString()}
-              image={event.image}
+              image={event.image || 'https://example.com/default-event-image.jpg'} // Default image URL
               description={event.description}
             />
           ))}

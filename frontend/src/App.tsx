@@ -6,7 +6,9 @@ import { auth } from './firebase'; // Firebase auth import
 import HomePage from './pages/HomePage';
 import ClubsPage from './pages/ClubsPage';
 import EventsPage from './pages/EventsPage';
-import AdminPage from './pages/AdminPage';
+import AdminPage from './pages/AdminPage'; 
+import AdminClubsPage from './pages/AdminClubsPage';  // New Page for Clubs Admin
+import AdminEventsPage from './pages/AdminEventsPage';  // New Page for Events Admin
 import ClubDetailPage from './pages/ClubDetailPage';
 import EventDetailPage from './pages/EventDetailPage';
 import LoginPage from './pages/LoginPage';
@@ -17,7 +19,7 @@ import Layout from './components/Layout';
 import NotFound from './components/NotFound';
 import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import Spinner from './components/Spinner'; 
+import Spinner from './components/Spinner';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './styles.css';
@@ -58,13 +60,23 @@ const App: React.FC = () => {
               <Route path="/" element={<Layout><HomePage /></Layout>} />
               <Route path="/clubs" element={<Layout><ClubsPage /></Layout>} />
               <Route path="/events" element={<Layout><EventsPage /></Layout>} />
+              
+              {/* Admin Pages */}
               <Route path="/admin" element={<PrivateRoute element={<Layout><AdminPage /></Layout>} />} />
+              <Route path="/admin/clubs" element={<PrivateRoute element={<Layout><AdminClubsPage /></Layout>} />} />
+              <Route path="/admin/events" element={<PrivateRoute element={<Layout><AdminEventsPage /></Layout>} />} />
+
+              {/* Club and Event Detail Pages */}
               <Route path="/clubs/:clubId" element={<Layout><ClubDetailPage /></Layout>} />
               <Route path="/events/:eventId" element={<Layout><EventDetailPage /></Layout>} />
+
+              {/* Auth Pages */}
               <Route path="/login" element={<Layout><LoginPage /></Layout>} />
               <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
               <Route path="/profile" element={<PrivateRoute element={<Layout><ProfilePage /></Layout>} />} />
               <Route path="/userinfo" element={<PrivateRoute element={<Layout><UserInfoPage /></Layout>} />} />
+
+              {/* 404 Not Found */}
               <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </Suspense>
