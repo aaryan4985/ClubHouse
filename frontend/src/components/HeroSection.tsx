@@ -25,7 +25,7 @@ const HeroSection = () => {
   return (
     <section className="relative bg-white text-center py-20 px-8 rounded-lg shadow-lg">
       {/* Heading with gradient text */}
-      <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+      <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent  animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
         One Platform, Endless Opportunities.
       </h2>
       <p className="text-lg mb-6 max-w-3xl mx-auto">

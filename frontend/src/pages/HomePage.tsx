@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
 
       {/* Upcoming Events Section */}
       <section className="my-16">
-        <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-center">Upcoming Events</h2>
+        <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-center">Upcoming Events</h2>
         <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {events.length > 0 ? (
             events.map(event => (
@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
 
       {/* Join a Club Section */}
       <section className="my-20">
-        <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-center">Join a Club</h2>
+        <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-center">Join a Club</h2>
         <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {clubs.length > 0 ? (
             clubs.map(club => (

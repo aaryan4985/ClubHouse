@@ -33,6 +33,18 @@ code {
   animation: gradient 15s ease infinite;
 }
 
+html::-webkit-scrollbar{
+  width: 1rem;
+}
+
+html::-webkit-scrollbar-track{
+  background: #a855f7;
+}
+
+html::-webkit-scrollbar-thumb{
+  background:  #ec4899;
+}
+
 /* Event Card Styles */
 .event-card {
   background: white; /* Background color for the card */
@@ -61,5 +73,23 @@ code {
   color: #666; /* Date color */
 }
 
-/* Additional styles can go here as needed */
+.footer-gradient {
+  background: linear-gradient(270deg, #6366F1, #8B5CF6, #EC4899); /* Indigo, Purple, Pink */
+  background-size: 200% 200%; /* Makes the animation smoother */
+  animation: gradient 8s ease-in-out infinite; /* Loop animation */
+  text-align: center;
+  padding: 1.5rem 0;
+  color: white;
+}
+
+/* Footer Link Styling */
+.footer-link {
+  transition: color 0.3s ease-in-out; /* Smooth color transition */
+  color: white;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: #D1D5DB; /* Light gray color on hover */
+}
 
