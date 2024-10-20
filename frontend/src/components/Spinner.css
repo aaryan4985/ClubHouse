@@ -1,19 +1,19 @@
 /* src/components/Spinner.css */
 .loader {
-    border: 4px solid #f3f3f3; /* Light grey */
-    border-top: 4px solid #3498db; /* Blue */
+    border: 4px solid #f3f3f3; /* Light grey background */
+    border-top: 4px solid transparent; /* Transparent top for gradient effect */
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 60px; /* Increased size for better visibility */
+    height: 60px; /* Increased size for better visibility */
     animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
+    background: linear-gradient(135deg, #6a5acd, #8360c3); /* Gradient colors */
+}
+
+@keyframes spin {
     0% {
-      transform: rotate(0deg);
+        transform: rotate(0deg);
     }
     100% {
-      transform: rotate(360deg);
+        transform: rotate(360deg);
     }
-  }
-  
+}

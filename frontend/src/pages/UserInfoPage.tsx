@@ -1,3 +1,4 @@
+// src/pages/UserInfoPage.tsx
 import React, { useState, useEffect } from 'react';
 import { getAuth, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
@@ -12,7 +13,6 @@ const UserInfoPage: React.FC = () => {
   const user = auth.currentUser;
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [photoURL, setPhotoURL] = useState('');
@@ -22,7 +22,6 @@ const UserInfoPage: React.FC = () => {
   const [address, setAddress] = useState('');
   const [interests, setInterests] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null); // For preview
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -31,8 +30,8 @@ const UserInfoPage: React.FC = () => {
           const userDoc = await getDoc(doc(firestore, 'users', user.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
-            setDisplayName(user.displayName || '');
-            setPhotoURL(user.photoURL || '');
+            setDisplayName(data.displayName || '');
+            setPhotoURL(data.photoURL || '');
             setBio(data.bio || '');
             setSocials(data.socials || '');
             setDob(data.dob || '');
@@ -44,21 +43,9 @@ const UserInfoPage: React.FC = () => {
           console.error('Error fetching user data:', error);
         }
       }
-      setLoading(false);
     };
     fetchUserData();
   }, [user, firestore]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setProfileImage(file);
-
-    // Generate preview URL for the selected image
-    if (file) {
-      const previewURL = URL.createObjectURL(file);
-      setImagePreview(previewURL);
-    }
-  };
 
   const handleImageUpload = async () => {
     if (profileImage) {
@@ -66,35 +53,35 @@ const UserInfoPage: React.FC = () => {
       await uploadBytes(imageRef, profileImage);
       return await getDownloadURL(imageRef);
     }
-    return user?.photoURL || '';
+    return photoURL;
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const newPhotoURL = await handleImageUpload();
-
-      // Update Firebase Auth profile
       await updateProfile(user!, { displayName, photoURL: newPhotoURL });
 
-      // Save additional data in Firestore
-      await setDoc(doc(firestore, 'users', user!.uid), {
-        bio,
-        socials,
-        dob,
-        phone,
-        address,
-        interests,
-      });
+      await setDoc(
+        doc(firestore, 'users', user!.uid),
+        {
+          displayName,
+          photoURL: newPhotoURL,
+          bio,
+          socials,
+          dob,
+          phone,
+          address,
+          interests,
+        },
+        { merge: true }
+      );
 
-      
       navigate('/profile');
     } catch (error) {
       console.error('Error updating profile:', error);
     }
   };
-
-  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -160,23 +147,9 @@ const UserInfoPage: React.FC = () => {
         <input
           type="file"
           accept="image/*"
-          onChange={handleImageChange}
+          onChange={(e) => setProfileImage(e.target.files?.[0] || null)}
           className="w-full p-2 mb-6"
         />
-
-        {imagePreview ? (
-          <img
-            src={imagePreview}
-            alt="Profile preview"
-            className="w-32 h-32 object-cover rounded-full mx-auto mb-4"
-          />
-        ) : photoURL ? (
-          <img
-            src={photoURL}
-            alt="Profile"
-            className="w-32 h-32 object-cover rounded-full mx-auto mb-4"
-          />
-        ) : null}
 
         <button
           type="submit"

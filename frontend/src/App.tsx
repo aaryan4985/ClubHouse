@@ -12,16 +12,18 @@ import EventDetailPage from './pages/EventDetailPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import ProfilePage from './pages/ProfilePage';
-import UserInfoPage from './pages/UserInfoPage'; // New UserInfoPage
+import UserInfoPage from './pages/UserInfoPage'; 
 import Layout from './components/Layout';
 import NotFound from './components/NotFound';
 import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import Spinner from './components/Spinner'; // Optional custom loading spinner
+import Spinner from './components/Spinner'; 
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 import './styles.css';
 
 // PrivateRoute Component to guard protected routes
-const PrivateRoute = ({ element }: { element: JSX.Element }) => {
+const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -50,25 +52,23 @@ const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <Layout>
-          <ErrorBoundary>
-            <Suspense fallback={<Spinner />}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/clubs" element={<ClubsPage />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route path="/admin" element={<PrivateRoute element={<AdminPage />} />} />
-                <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
-                <Route path="/events/:eventId" element={<EventDetailPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignUpPage />} />
-                <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
-                <Route path="/userinfo" element={<PrivateRoute element={<UserInfoPage />} />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </Layout>
+        <ErrorBoundary>
+          <Suspense fallback={<Spinner />}>
+            <Routes>
+              <Route path="/" element={<Layout><HomePage /></Layout>} />
+              <Route path="/clubs" element={<Layout><ClubsPage /></Layout>} />
+              <Route path="/events" element={<Layout><EventsPage /></Layout>} />
+              <Route path="/admin" element={<PrivateRoute element={<Layout><AdminPage /></Layout>} />} />
+              <Route path="/clubs/:clubId" element={<Layout><ClubDetailPage /></Layout>} />
+              <Route path="/events/:eventId" element={<Layout><EventDetailPage /></Layout>} />
+              <Route path="/login" element={<Layout><LoginPage /></Layout>} />
+              <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
+              <Route path="/profile" element={<PrivateRoute element={<Layout><ProfilePage /></Layout>} />} />
+              <Route path="/userinfo" element={<PrivateRoute element={<Layout><UserInfoPage /></Layout>} />} />
+              <Route path="*" element={<Layout><NotFound /></Layout>} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </AuthProvider>
     </Router>
   );

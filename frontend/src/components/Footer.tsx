@@ -4,14 +4,16 @@ import { Link } from 'react-router-dom'; // Assuming you're using react-router f
 
 const Footer = () => {
   return (
-    <footer className="p-6 bg-gray-800 text-white text-center">
-      <div className="mb-4">
-        <Link to="/" className="text-white hover:text-gray-400 mx-2">Home</Link>
-        <Link to="/events" className="text-white hover:text-gray-400 mx-2">Events</Link>
-        <Link to="/clubs" className="text-white hover:text-gray-400 mx-2">Clubs</Link>
-        <Link to="/about" className="text-white hover:text-gray-400 mx-2">About Us</Link>
+    <footer className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white text-center py-6">
+      <div className="flex flex-col items-center mb-4">
+        <div className="space-x-4 mb-2">
+          <Link to="/" className="text-white hover:text-gray-400">Home</Link>
+          <Link to="/events" className="text-white hover:text-gray-400">Events</Link>
+          <Link to="/clubs" className="text-white hover:text-gray-400">Clubs</Link>
+          <Link to="/about" className="text-white hover:text-gray-400">About Us</Link>
+        </div>
+        <p className="text-sm">&copy; 2024 Clubhouse. All Rights Reserved.</p>
       </div>
-      <p className="text-sm">&copy; 2024 Clubhouse. All Rights Reserved.</p>
     </footer>
   );
 };

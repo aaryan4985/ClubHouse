@@ -1,4 +1,3 @@
-// src/pages/SignUpPage.tsx
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -14,43 +13,43 @@ const SignUpPage: React.FC = () => {
     e.preventDefault();
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/profile'); // Redirect to profile page after signup
+      navigate('/'); // Redirect to home page
     } catch (err) {
       setError('Sign-up failed. Please try again.');
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded shadow-md">
-        <h2 className="text-2xl font-semibold text-center mb-6">Sign Up</h2>
-        <form onSubmit={handleSignUp} className="space-y-4">
+    <div className="flex items-center justify-center min-h-screen animate-gradient bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+      <div className="w-full max-w-md bg-white p-10 rounded-lg shadow-2xl">
+        <h2 className="text-3xl font-extrabold text-center mb-6 text-gray-700">Sign Up</h2>
+        <form onSubmit={handleSignUp} className="space-y-6">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 text-pink-600"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-4 rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 text-pink-600"
           />
           <button
             type="submit"
-            className="w-full bg-green-500 text-white py-3 rounded hover:bg-green-600 transition"
+            className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-pink-600 transition-all transform hover:scale-105 shadow-lg"
           >
             Sign Up
           </button>
           {error && <p className="text-red-500 text-center">{error}</p>}
         </form>
-        <div className="mt-4 text-center">
-          <p className="text-sm">
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-500">
             Already have an account?{' '}
-            <Link to="/login" className="text-blue-500 hover:underline">
+            <Link to="/login" className="text-purple-600 hover:underline">
               Login
             </Link>
           </p>
