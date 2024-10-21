@@ -1,12 +1,12 @@
 // src/types.ts
 
 export interface Event {
-    id: string;
-    title: string;
-    date: string;
-    description: string;
-    image: string;
-  }
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  image?: string;
+}
   
   export interface Club {
     id: string;
@@ -14,5 +14,6 @@ export interface Event {
     description: string;
     logo?: string; // Optional, if applicable
     members?: { id: string; name: string }[]; // Optional: Array of member objects
+    image?: string;
   }
   

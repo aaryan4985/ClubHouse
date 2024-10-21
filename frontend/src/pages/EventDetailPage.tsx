@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '../firebase'; // Adjust the import as necessary
+import { auth } from '../firebase'; // Import your Firebase auth instance
 
 interface Event {
   id: string;
@@ -21,6 +22,7 @@ interface Event {
 
 const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +99,29 @@ const EventDetailPage: React.FC = () => {
         event.imagePath
       )}?alt=media`
     : ''; // Placeholder URL if imagePath is not defined
+
+  const handleRegisterClick = async () => {
+    if (!auth.currentUser) {
+      // Handle case where user is not logged in
+      alert('You must be logged in to register for an event.');
+      return;
+    }
+
+    const userId = auth.currentUser.uid; // Get the logged-in user's ID
+    const userDocRef = doc(db, 'users', userId); // Assuming user data is stored in 'users' collection
+
+    try {
+      // Add event to the user's registered events
+      await updateDoc(userDocRef, {
+        registeredEvents: arrayUnion(eventId), // Add the eventId to the user's registered events array
+      });
+      alert('Successfully registered for the event!');
+      navigate(`/profile/${userId}`); // Navigate to the user's profile page
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      alert('Failed to register for the event. Please try again later.');
+    }
+  };
 
   return (
     <div className="container mx-auto p-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-md">
@@ -189,6 +214,16 @@ const EventDetailPage: React.FC = () => {
           <li className="text-gray-300">No Social Media Links Available</li>
         )}
       </ul>
+
+      {/* Register Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={handleRegisterClick}
+          className="px-6 py-2 bg-green-600 text-white font-semibold rounded hover:bg-green-700"
+        >
+          Register for Event
+        </button>
+      </div>
     </div>
   );
 };

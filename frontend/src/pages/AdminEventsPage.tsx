@@ -1,7 +1,11 @@
+// AdminEventsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { storage, db } from '../firebase';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { 
+  collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc 
+} from 'firebase/firestore';
+import { deleteObject } from 'firebase/storage';
+import { uploadBytes, ref, getDownloadURL } from 'firebase/storage';
 
 interface Event {
   id: string;
@@ -9,10 +13,10 @@ interface Event {
   description: string;
   rules: string;
   venue: string;
-  timing: string; // Assuming this is a string that includes time info
-  date: string; // Use format 'YYYY-MM-DD' for date
+  timing: string; // 'HH:mm' format
+  date: string; // 'YYYY-MM-DD'
   imagePath: string;
-  imageUrl: string; // Added imageUrl property
+  imageUrl: string; // For rendering images
 }
 
 const AdminEventsPage: React.FC = () => {
@@ -27,8 +31,8 @@ const AdminEventsPage: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
+  // Fetch events from Firestore
   const fetchEvents = async () => {
     setLoading(true);
     try {
@@ -36,42 +40,27 @@ const AdminEventsPage: React.FC = () => {
       const data = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const event = doc.data();
-          try {
-            const imageUrl = event.imagePath ? 
-              await getDownloadURL(ref(storage, event.imagePath)) : 
-              '/placeholder-image.png';
-            
-            return {
-              id: doc.id,
-              title: event.title,
-              description: event.description,
-              rules: event.rules,
-              venue: event.venue,
-              timing: event.timing,
-              date: event.date,
-              imagePath: event.imagePath,
-              imageUrl: imageUrl,
-            };
-          } catch (err) {
-            console.error('Error fetching image URL:', err);
-            return {
-              id: doc.id,
-              title: event.title || '',
-              description: event.description || '',
-              rules: event.rules || '',
-              venue: event.venue || '',
-              timing: event.timing || '',
-              date: event.date || '',
-              imagePath: event.imagePath || '',
-              imageUrl: '/placeholder-image.png',
-            };
-          }
+          const imageUrl = event.imagePath 
+            ? await getDownloadURL(ref(storage, event.imagePath)) 
+            : '/placeholder-image.png';
+
+          return {
+            id: doc.id,
+            title: event.title,
+            description: event.description,
+            rules: event.rules,
+            venue: event.venue,
+            timing: event.timing,
+            date: event.date,
+            imagePath: event.imagePath,
+            imageUrl,
+          };
         })
       );
       setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
-      setFeedback('Error fetching events. Please try again later.');
+      setFeedback('Failed to load events. Try again later.');
     } finally {
       setLoading(false);
     }
@@ -81,36 +70,8 @@ const AdminEventsPage: React.FC = () => {
     fetchEvents();
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      events.forEach(event => {
-        const eventDateTime = new Date(`${event.date}T${event.timing}`);
-        const timeDifference = eventDateTime.getTime() - now.getTime();
-
-        if (timeDifference > 0) {
-          setTimeLeft({
-            days: Math.floor(timeDifference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-            minutes: Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60)),
-            seconds: Math.floor((timeDifference % (1000 * 60)) / 1000),
-          });
-        } else {
-          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        }
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [events]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) {
-      setEventImage(null);
-      return;
-    }
-
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       setEventImage(file);
       setFeedback('');
@@ -133,7 +94,7 @@ const AdminEventsPage: React.FC = () => {
     }
 
     if (!editingEventId && !eventImage) {
-      setFeedback('Please select an image for the new event.');
+      setFeedback('Please select an image.');
       return;
     }
 
@@ -144,9 +105,9 @@ const AdminEventsPage: React.FC = () => {
       if (editingEventId) {
         const eventRef = doc(db, 'events', editingEventId);
         const existingEvent = await getDoc(eventRef);
-        
+
         if (!existingEvent.exists()) {
-          setFeedback('Error: Event not found.');
+          setFeedback('Event not found.');
           return;
         }
 
@@ -160,17 +121,9 @@ const AdminEventsPage: React.FC = () => {
         };
 
         if (eventImage) {
-          // Delete old image if it exists
-          const oldImagePath = existingEvent.data().imagePath;
-          if (oldImagePath) {
-            try {
-              await deleteObject(ref(storage, oldImagePath));
-            } catch (error) {
-              console.error('Error deleting old image:', error);
-            }
-          }
-          
-          // Upload new image
+          const oldImagePath = existingEvent.data()?.imagePath;
+          if (oldImagePath) await deleteObject(ref(storage, oldImagePath));
+
           imagePath = await uploadImage(eventImage);
           updates.imagePath = imagePath;
         }
@@ -178,12 +131,7 @@ const AdminEventsPage: React.FC = () => {
         await updateDoc(eventRef, updates);
         setFeedback('Event updated successfully!');
       } else {
-        if (!eventImage) {
-          setFeedback('Please select an image for the new event.');
-          return;
-        }
-        
-        imagePath = await uploadImage(eventImage);
+        imagePath = await uploadImage(eventImage!);
         await addDoc(collection(db, 'events'), {
           title: eventTitle,
           description: eventDescription,
@@ -196,11 +144,11 @@ const AdminEventsPage: React.FC = () => {
         setFeedback('Event added successfully!');
       }
 
-      await fetchEvents();
       resetForm();
+      fetchEvents();
     } catch (error) {
       console.error('Error saving event:', error);
-      setFeedback(`Error saving event: ${error instanceof Error ? error.message : 'Please try again.'}`);
+      setFeedback('Error saving event. Try again.');
     } finally {
       setLoading(false);
     }
@@ -216,12 +164,6 @@ const AdminEventsPage: React.FC = () => {
     setEventImage(null);
     setEditingEventId(null);
     setFeedback('');
-    
-    // Reset file input
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
   };
 
   const handleEditEvent = (event: Event) => {
@@ -232,30 +174,20 @@ const AdminEventsPage: React.FC = () => {
     setEventTiming(event.timing);
     setEventDate(event.date);
     setEditingEventId(event.id);
-    setEventImage(null); // Reset the image input
-    setFeedback('');
   };
 
   const handleDeleteEvent = async (id: string, imagePath: string) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) {
-      return;
-    }
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
 
     setLoading(true);
     try {
-      if (imagePath) {
-        try {
-          await deleteObject(ref(storage, imagePath));
-        } catch (error) {
-          console.error('Error deleting image:', error);
-        }
-      }
+      if (imagePath) await deleteObject(ref(storage, imagePath));
       await deleteDoc(doc(db, 'events', id));
-      setFeedback('Event deleted successfully.');
-      await fetchEvents();
+      setFeedback('Event deleted.');
+      fetchEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
-      setFeedback('Error deleting event. Please try again.');
+      setFeedback('Error deleting event.');
     } finally {
       setLoading(false);
     }
@@ -272,45 +204,45 @@ const AdminEventsPage: React.FC = () => {
           placeholder="Event Title" 
           value={eventTitle} 
           onChange={(e) => setEventTitle(e.target.value)} 
-          className="p-2 border rounded w-full"
+          className="p-2 border rounded w-full" 
         />
         <textarea 
           placeholder="Event Description" 
           value={eventDescription} 
           onChange={(e) => setEventDescription(e.target.value)} 
-          className="p-2 border rounded w-full mt-2"
+          className="p-2 border rounded w-full mt-2" 
         />
         <textarea 
           placeholder="Event Rules" 
           value={eventRules} 
           onChange={(e) => setEventRules(e.target.value)} 
-          className="p-2 border rounded w-full mt-2"
+          className="p-2 border rounded w-full mt-2" 
         />
         <input 
           type="text" 
           placeholder="Event Venue" 
           value={eventVenue} 
           onChange={(e) => setEventVenue(e.target.value)} 
-          className="p-2 border rounded w-full mt-2"
+          className="p-2 border rounded w-full mt-2" 
         />
         <input 
           type="text" 
-          placeholder="Event Timing (e.g. 10:00 AM)" 
+          placeholder="Event Timing (e.g., 10:00 AM)" 
           value={eventTiming} 
           onChange={(e) => setEventTiming(e.target.value)} 
-          className="p-2 border rounded w-full mt-2"
+          className="p-2 border rounded w-full mt-2" 
         />
         <input 
           type="date" 
           value={eventDate} 
           onChange={(e) => setEventDate(e.target.value)} 
-          className="p-2 border rounded w-full mt-2"
+          className="p-2 border rounded w-full mt-2" 
         />
         <input 
           type="file" 
           accept="image/*" 
           onChange={handleFileChange} 
-          className="mt-2"
+          className="mt-2" 
         />
         <button 
           onClick={handleSubmit} 
@@ -321,28 +253,23 @@ const AdminEventsPage: React.FC = () => {
       </div>
       <h2 className="text-xl font-bold mb-2">Events List</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {events.map(event => (
-          <div key={event.id} className="border rounded-lg overflow-hidden shadow-md p-4">
+        {events.map((event) => (
+          <div key={event.id} className="border rounded-lg p-4 shadow-md">
             <img src={event.imageUrl} alt={event.title} className="w-full h-48 object-cover mb-2" />
             <h3 className="font-bold text-lg">{event.title}</h3>
             <p>{event.description}</p>
             <p><strong>Venue:</strong> {event.venue}</p>
-            <p><strong>Rules:</strong> {event.rules}</p>
             <p><strong>Date:</strong> {event.date} <strong>Time:</strong> {event.timing}</p>
-            <div className="text-sm text-gray-500">
-              <p>Countdown to event:</p>
-              <p>{timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</p>
-            </div>
-            <div className="flex justify-between mt-4">
+            <div className="mt-2 flex gap-2">
               <button 
                 onClick={() => handleEditEvent(event)} 
-                className="bg-yellow-500 text-white p-1 rounded"
+                className="bg-yellow-500 text-white px-4 py-2 rounded"
               >
                 Edit
               </button>
               <button 
                 onClick={() => handleDeleteEvent(event.id, event.imagePath)} 
-                className="bg-red-500 text-white p-1 rounded"
+                className="bg-red-500 text-white px-4 py-2 rounded"
               >
                 Delete
               </button>

@@ -13,6 +13,7 @@ import ClubDetailPage from './pages/ClubDetailPage';
 import EventDetailPage from './pages/EventDetailPage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
+import RegisterPage from './pages/RegistrationPage'; // New Register Page
 import ProfilePage from './pages/ProfilePage';
 import UserInfoPage from './pages/UserInfoPage'; 
 import Layout from './components/Layout';
@@ -73,6 +74,7 @@ const App: React.FC = () => {
               {/* Auth Pages */}
               <Route path="/login" element={<Layout><LoginPage /></Layout>} />
               <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
+              <Route path="/register/:eventId" element={<PrivateRoute element={<Layout><RegisterPage /></Layout>} />} /> {/* New Registration Route */}
               <Route path="/profile" element={<PrivateRoute element={<Layout><ProfilePage /></Layout>} />} />
               <Route path="/userinfo" element={<PrivateRoute element={<Layout><UserInfoPage /></Layout>} />} />
 

@@ -5,7 +5,6 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase'; 
 import { Club } from '../types'; 
 import Spinner from '../components/Spinner'; 
-import Chat from '../components/Chat'; 
 
 const ClubsPage: React.FC = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -60,7 +59,7 @@ const ClubsPage: React.FC = () => {
           <p>No clubs found.</p>
         )}
       </div>
-      <Chat /> {/* Optional Chat Component */}
+      
     </div>
   );
 };

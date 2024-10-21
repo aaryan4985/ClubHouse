@@ -1,12 +1,13 @@
 // src/components/EventCard.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { uploadImage } from '../utils/uploadImage'; // Import the uploadImage function
 
 interface EventCardProps {
   id: string; // Unique identifier for the event
   title: string;
   date: string;
-  image: string;
+  image: string; // Image URL from the database, should be the URL returned by uploadImage after upload
   description: string;
 }
 
