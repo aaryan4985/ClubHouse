@@ -24,6 +24,7 @@ import Spinner from './components/Spinner';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './styles.css';
+import ClubChatPage from './pages/ClubChatPage';
 
 // PrivateRoute Component to guard protected routes
 const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
@@ -70,6 +71,7 @@ const App: React.FC = () => {
               {/* Club and Event Detail Pages */}
               <Route path="/clubs/:clubId" element={<Layout><ClubDetailPage /></Layout>} />
               <Route path="/events/:eventId" element={<Layout><EventDetailPage /></Layout>} />
+              <Route path="/clubs/:clubId/chat" element={<ClubChatPage />} />
 
               {/* Auth Pages */}
               <Route path="/login" element={<Layout><LoginPage /></Layout>} />
