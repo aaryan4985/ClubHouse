@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, onSnapshot, collection, query, where } from 'firebase/firestore';
-import { app } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { FaEdit } from 'react-icons/fa'; // Import pencil icon
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { FaEdit } from 'react-icons/fa';
+
+// Define proper interfaces
+interface Event {
+  id: string;
+  name: string;
+  description: string;
+  venue: string;
+  timing: string;
+  date: string;
+  imagePath?: string;
+  rules: string;
+}
 
 interface UserData {
   bio?: string;
@@ -13,122 +24,163 @@ interface UserData {
   address?: string;
   interests?: string;
   languages?: string[];
+  registeredEvents?: Event[];
 }
 
-interface EventData {
-  id: string;
-  name: string; // Assuming each event has a name
-  date: string; // Assuming each event has a date
+// Separate EventCard component with proper typing
+interface EventCardProps {
+  event: Event;
+  onClick: () => void;
 }
+
+const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => (
+  <div 
+    onClick={onClick}
+    className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow"
+  >
+    <h4 className="text-lg font-semibold text-pink-600">{event.name}</h4>
+    <p className="text-gray-600 text-sm mt-1">{event.description}</p>
+    <div className="mt-2 text-sm">
+      <p><strong>Venue:</strong> {event.venue}</p>
+      <p><strong>Date:</strong> {event.date}</p>
+      <p><strong>Time:</strong> {event.timing}</p>
+    </div>
+  </div>
+);
 
 const ProfilePage: React.FC = () => {
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
-  const [user, setUser] = useState<any>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [registeredEvents, setRegisteredEvents] = useState<EventData[]>([]); // State for registered events
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        const userDocRef = doc(firestore, 'users', currentUser.uid);
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
         
-        // Fetch user data
-        const unsubscribeDoc = onSnapshot(userDocRef, (doc) => {
-          setUserData(doc.data() as UserData);
-        });
-        
-        // Fetch registered events
-        const eventsQuery = query(collection(firestore, 'events'), where('registeredUsers', 'array-contains', currentUser.uid));
-        const unsubscribeEvents = onSnapshot(eventsQuery, (querySnapshot) => {
-          const events: EventData[] = [];
-          querySnapshot.forEach((doc) => {
-            events.push({ id: doc.id, ...doc.data() } as EventData);
-          });
-          setRegisteredEvents(events);
-          setLoading(false); // Set loading to false after fetching data
-        });
+        const unsubscribeDoc = onSnapshot(
+          userDocRef,
+          (doc) => {
+            if (doc.exists()) {
+              setUserData(doc.data() as UserData);
+              setError(null);
+            } else {
+              setError('User data not found');
+            }
+            setLoading(false);
+          },
+          (err) => {
+            console.error('Error fetching user data:', err);
+            setError('Error loading user data');
+            setLoading(false);
+          }
+        );
 
-        return () => {
-          unsubscribeDoc();
-          unsubscribeEvents();
-        };
+        return () => unsubscribeDoc();
       } else {
-        setLoading(false); // Set loading to false if no user is found
+        setLoading(false);
+        navigate('/login');
       }
     });
 
     return () => unsubscribeAuth();
-  }, [auth, firestore]);
+  }, [navigate]);
 
-  // Show loading state while fetching user data
-  if (loading) return <div className="flex items-center justify-center min-h-screen text-xl">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-xl">
+        Loading...
+      </div>
+    );
+  }
 
-  // Show profile content after loading
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-xl text-red-600">
+        {error}
+      </div>
+    );
+  }
+
+  if (!auth.currentUser) {
+    return null;
+  }
+
+  const handleEventClick = (eventId: string) => {
+    if (eventId) {
+      navigate(`/events/${eventId}`);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-400 to-purple-600 text-white p-10">
-      <div className="w-full max-w-lg animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-lg p-8 relative">
-        <img
-          src={user?.photoURL || 'https://via.placeholder.com/150'}
-          alt="Profile"
-          className="w-32 h-32 mx-auto rounded-full border-4 border-white mb-6"
-        />
-        <h2 className="text-3xl font-bold text-center mb-2 text-white">{user?.displayName || 'User'}</h2>
-        <p className="text-center text-white mb-4">{user?.email}</p>
-
-        <div className="text-left space-y-4">
-          <p className="bg-purple-100 p-4 rounded-md text-pink-600">
-            <strong>Bio:</strong> {userData?.bio || 'No bio provided.'}
-          </p>
-          <p className="bg-purple-100 p-4 rounded-md text-pink-600">
-            <strong>Socials:</strong> {userData?.socials || 'No socials linked.'}
-          </p>
-          <p className="bg-purple-100 p-4 rounded-md text-pink-600">
-            <strong>Date of Birth:</strong> {userData?.dob || 'Not provided.'}
-          </p>
-          <p className="bg-purple-100 p-4 rounded-md text-pink-600">
-            <strong>Phone:</strong> {userData?.phone || 'Not provided.'}
-          </p>
-          <p className="bg-purple-100 p-4 rounded-md text-pink-600">
-            <strong>Address:</strong> {userData?.address || 'Not provided.'}
-          </p>
-          <p className="bg-purple-100 p-4 rounded-md text-pink-600">
-            <strong>Interests:</strong> {userData?.interests || 'No interests listed.'}
-          </p>
-          <p className="bg-purple-100 p-4 rounded-md text-pink-600">
-            <strong>Languages:</strong> {userData?.languages?.join(', ') || 'No languages selected.'}
-          </p>
-        </div>
-
-        {/* Registered Events Section */}
-        <div className="mt-6">
-          <h3 className="text-2xl font-bold text-center mb-4">Registered Events</h3>
-          <ul className="space-y-2">
-            {registeredEvents.length > 0 ? (
-              registeredEvents.map((event) => (
-                <li key={event.id} className="bg-purple-100 p-4 rounded-md text-pink-600">
-                  <h4 className="font-semibold">{event.name}</h4>
-                  <p>{event.date}</p>
-                </li>
-              ))
-            ) : (
-              <p className="text-center text-white">No registered events.</p>
-            )}
-          </ul>
-        </div>
-
-        {/* Edit Profile Button */}
-        <div className="absolute top-4 right-4">
+    <div className="flex items-center justify-center min-h-screen bg-pink-200 p-10">
+      <div className="w-full max-w-4xl animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-lg p-8 relative">
+        {/* Profile Header */}
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex items-center">
+            <img
+              src={auth.currentUser.photoURL || '/default-avatar.png'}
+              alt="Profile"
+              className="w-32 h-32 rounded-full border-4 border-white"
+            />
+            <div className="ml-6">
+              <h2 className="text-3xl font-bold text-white">
+                {auth.currentUser.displayName || 'User'}
+              </h2>
+              <p className="text-white">{auth.currentUser.email}</p>
+            </div>
+          </div>
           <button
             onClick={() => navigate('/userinfo')}
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors"
           >
             <FaEdit className="inline mr-1" />
             Edit Profile
           </button>
+        </div>
+
+        {/* Profile Content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Personal Information */}
+          <div className="space-y-4">
+            <div className="bg-purple-100 p-4 rounded-md">
+              <h3 className="text-xl font-semibold text-pink-600 mb-2">Personal Information</h3>
+              <div className="space-y-2">
+                <p><strong>Bio:</strong> {userData?.bio || 'No bio provided.'}</p>
+                <p><strong>Date of Birth:</strong> {userData?.dob || 'Not provided.'}</p>
+                <p><strong>Phone:</strong> {userData?.phone || 'Not provided.'}</p>
+                <p><strong>Address:</strong> {userData?.address || 'Not provided.'}</p>
+              </div>
+            </div>
+
+            <div className="bg-purple-100 p-4 rounded-md">
+              <h3 className="text-xl font-semibold text-pink-600 mb-2">Interests & Skills</h3>
+              <div className="space-y-2">
+                <p><strong>Interests:</strong> {userData?.interests || 'No interests listed.'}</p>
+                <p><strong>Languages:</strong> {userData?.languages?.join(', ') || 'No languages listed.'}</p>
+                <p><strong>Social Links:</strong> {userData?.socials || 'No social links provided.'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Registered Events */}
+          <div className="bg-purple-100 p-4 rounded-md">
+            <h3 className="text-xl font-semibold text-pink-600 mb-4">Registered Events</h3>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {userData?.registeredEvents && userData.registeredEvents.length > 0 ? (
+                userData.registeredEvents.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onClick={() => handleEventClick(event.id)}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-gray-600">No registered events yet.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

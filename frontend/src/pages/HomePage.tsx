@@ -74,7 +74,7 @@ const HomePage: React.FC = () => {
                   id={event.id}
                   title={event.title}
                   date={event.date}
-                  image={event.image || 'default-image.png'}
+                  imagePath={event.imagePath || 'default-image.png'}
                   description={event.description}
                 />
               ))
@@ -87,7 +87,7 @@ const HomePage: React.FC = () => {
         {/* Join a Club Section */}
         <section className="my-20 mx-4 md:mx-16">
           <h2 className="text-5xl font-extrabold mb-10 text-center bg-clip-text text-transparent animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
-            ✨ Join a Club
+            ✨ Clubs
           </h2>
           <div className="grid gap-10 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {clubs.length > 0 ? (
@@ -96,7 +96,7 @@ const HomePage: React.FC = () => {
                   key={club.id}
                   name={club.name}
                   description={club.description}
-                  logo={club.logo || 'default-logo.png'}
+                  imageUrl={club.imageUrl || 'default-logo.png'}
                   clubId={club.id}
                 />
               ))

@@ -1,6 +1,6 @@
 // src/utils/uploadImage.ts
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { auth, storage } from "../firebase"; // Adjust this import based on your project structure
+import { storage } from "../firebase"; // Adjust this import based on your project structure
 
 export const uploadImage = async (uri: string, eventId: string): Promise<string> => {
   // Convert image URI to blob

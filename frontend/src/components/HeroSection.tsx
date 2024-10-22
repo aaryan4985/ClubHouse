@@ -1,155 +1,127 @@
 import React, { useEffect, useState } from 'react';
 import Slider from 'react-slick';
-import { Event, Club } from '../types';
-import { collection, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { collection, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '../firebase';
-import { getStorage, ref, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
-import { ImageOff } from 'lucide-react';
-import { updateProfile } from 'firebase/auth';
-import { auth } from '../firebase'; // Make sure to import your Firebase Auth instance
+import { ImageOff, Calendar, Users, ArrowRight } from 'lucide-react';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { Event, Club } from '../types';
 
-// Simplified interfaces
-interface SlideData {
+interface SlideData extends DocumentData {
   id: string;
   title?: string;
   name?: string;
   description: string;
   date?: string;
-  image?: string;
+  imagePath?: string;
+  imageUrl?: string;
+  memberCount?: number;
+  category?: string;
+}
+
+interface SliderSettings {
+  dots: boolean;
+  infinite: boolean;
+  speed: number;
+  slidesToShow: number;
+  slidesToScroll: number;
+  autoplay: boolean;
+  autoplaySpeed: number;
+  arrows: boolean;
+  className: string;
+  dotsClass: string;
 }
 
 const HeroSection: React.FC = () => {
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [loading, setLoading] = useState(true);
-  
   const navigate = useNavigate();
 
-  const sliderSettings = {
+  const sliderSettings: SliderSettings = {
     dots: true,
     infinite: slides.length > 1,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: slides.length > 1,
-    autoplaySpeed: 4000,
-    arrows: false,
+    autoplaySpeed: 3000,
+    arrows: true,
+    className: "rounded-xl overflow-hidden",
+    dotsClass: "slick-dots custom-dots",
   };
 
-  // Function to upload image and get its download URL
-  const uploadImage = async (uri: string) => {
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        resolve(xhr.response);
-      };
-      xhr.onerror = function () {
-        reject(new TypeError('Network request failed'));
-      };
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
-    });
-
-    const storage = getStorage();
-    if (!auth.currentUser) {
-      throw new Error('No authenticated user found');
-    }
-    const fileRef = ref(storage, `images/${auth.currentUser.uid}/image_${Date.now()}.jpg`); // Unique file name
+  const formatFirebaseStorageUrl = (path: string): string => {
+    if (!path) return '';
     
-    // Create an upload task
-    const uploadTask = uploadBytesResumable(fileRef, blob);
-
-    // Wait for the upload to complete
-    return new Promise<string>((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          // You can monitor the progress here if needed
-        },
-        (error) => {
-          console.error('Upload failed:', error);
-          reject(error);
-        },
-        async () => {
-          // Get the download URL after successful upload
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          if (auth.currentUser) {
-            await updateProfile(auth.currentUser, { photoURL: downloadURL });
-          } else {
-            console.error('No authenticated user found');
-          }
-          resolve(downloadURL);
-        }
-      );
-    });
+    // Check if the path is already a complete URL
+    if (path.startsWith('https://')) return path;
+    
+    // Remove leading slash if present
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    
+    // Construct the Firebase Storage URL
+    return `https://firebasestorage.googleapis.com/v0/b/clubhouse-685bd.appspot.com/o/${encodeURIComponent(cleanPath)}?alt=media`;
   };
 
-  // Simplified image loading
-  const getImageUrl = async (imagePath: string) => {
-    try {
-      const storage = getStorage();
-      const imageRef = ref(storage, imagePath);
-      return await getDownloadURL(imageRef);
-    } catch (error) {
-      console.error('Error loading image:', error);
-      return null;
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return date > now ? 'Tomorrow' : 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ${date > now ? 'from now' : 'ago'}`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks} week${weeks > 1 ? 's' : ''} ${date > now ? 'from now' : 'ago'}`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} month${months > 1 ? 's' : ''} ${date > now ? 'from now' : 'ago'}`;
+    } else {
+      const years = Math.floor(diffDays / 365);
+      return `${years} year${years > 1 ? 's' : ''} ${date > now ? 'from now' : 'ago'}`;
     }
   };
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch data from Firestore
         const [eventsSnap, clubsSnap] = await Promise.all([
           getDocs(collection(db, 'events')),
           getDocs(collection(db, 'clubs'))
         ]);
 
-        // Process events
-        const eventData = eventsSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          title: doc.data().title,
-          description: doc.data().description,
-          date: doc.data().date,
-          image: doc.data().image,
-        }));
+        const eventData = eventsSnap.docs.map(doc => {
+          const data = doc.data() as Event;
+          return {
+            ...data,
+            id: doc.id,
+            imageUrl: data.imagePath ? formatFirebaseStorageUrl(data.imagePath) : null,
+          } as SlideData;
+        });
 
-        // Process clubs
-        const clubData = clubsSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          name: doc.data().name,
-          description: doc.data().description,
-          image: doc.data().image,
-        }));
+        const clubData = clubsSnap.docs.map(doc => {
+          const data = doc.data() as Club;
+          return {
+            ...data,
+            id: doc.id,
+            imageUrl: data.imageUrl ? formatFirebaseStorageUrl(data.imageUrl) : null,
+          } as SlideData;
+        });
 
-        // Combine and shuffle
         const combinedData = [...eventData, ...clubData]
           .sort(() => Math.random() - 0.5)
           .slice(0, 6);
 
-        // Load images and update state
-        const dataWithImages = await Promise.all(
-          combinedData.map(async (item) => {
-            if (item.image) {
-              const imageUrl = await getImageUrl(item.image);
-              if (imageUrl) {
-                return { ...item, image: imageUrl };
-              }
-              // If the image URL is invalid, upload the image if possible
-              const uploadedImageUrl = await uploadImage(item.image);
-              return { ...item, image: uploadedImageUrl || '/fallback.jpg' };
-            }
-            return { ...item, image: '/fallback.jpg' };
-          })
-        );
-
-        setSlides(dataWithImages);
+        setSlides(combinedData);
       } catch (error) {
         console.error('Error loading data:', error);
-        setSlides([]); // Set empty state on error
+        setSlides([]);
       } finally {
         setLoading(false);
       }
@@ -158,75 +130,110 @@ const HeroSection: React.FC = () => {
     loadData();
   }, []);
 
-  const handleLearnMore = (slide: SlideData) => {
+  const handleSlideClick = (slide: SlideData): void => {
     const path = slide.title ? `/events/${slide.id}` : `/clubs/${slide.id}`;
     navigate(path);
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-        <p className="text-gray-600">Loading...</p>
+      <div className="flex justify-center items-center h-96 bg-gradient-to-r from-purple-900 to-pink-900 rounded-xl">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
       </div>
     );
   }
 
   if (slides.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-        <p className="text-gray-600">No content available</p>
+      <div className="flex justify-center items-center h-96 bg-gradient-to-r from-purple-900 to-pink-900 rounded-xl">
+        <p className="text-white text-xl">No content available</p>
       </div>
     );
   }
 
   return (
-    <section className="relative bg-gradient-to-r from-blue-900 via-purple-800 to-indigo-900 py-16 px-8 rounded-lg shadow-lg">
-      <h2 className="text-4xl font-bold mb-8 text-center text-white">
-        One Platform, Endless Opportunities
-      </h2>
+    <section className="relative py-16 px-4 md:px-8">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-4xl md:text-6xl font-black mb-12 text-center bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+          One Platform, Endless Opportunities
+        </h2>
 
-      <div className="max-w-4xl mx-auto">
         <Slider {...sliderSettings}>
           {slides.map((slide) => (
-            <div key={slide.id} className="px-4">
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <div className="relative w-full h-56 mb-4 bg-gray-100 rounded-md overflow-hidden">
-                  {slide.image ? (
+            <div key={slide.id} className="px-2">
+              <div 
+                className="relative rounded-xl overflow-hidden cursor-pointer transform transition-transform hover:scale-[1.02]"
+                onClick={() => handleSlideClick(slide)}
+              >
+                <div className="relative w-full h-[32rem] bg-gradient-to-r from-purple-900 to-pink-900">
+                  {slide.imageUrl ? (
                     <img
-                      src={slide.image}
-                      alt={slide.title || slide.name}
+                      src={slide.imageUrl}
+                      alt={slide.title || slide.name || ''}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const img = e.target as HTMLImageElement;
-                        img.src = '/fallback.jpg';
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                        const img = e.currentTarget;
+                        img.src = '/api/placeholder/800/600';
                       }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ImageOff className="w-12 h-12 text-gray-400" />
+                      <ImageOff className="w-16 h-16 text-white/50" />
                     </div>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent">
+                    <div className="absolute bottom-0 left-0 right-0 p-8">
+                      <div className="max-w-3xl">
+                        <h3 className="text-4xl font-bold text-white mb-4">
+                          {slide.title || slide.name}
+                        </h3>
+                        
+                        <div className="flex flex-wrap gap-4 mb-4">
+                          {slide.date && (
+                            <span className="inline-flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-white">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              {formatDate(slide.date)}
+                            </span>
+                          )}
+                          {slide.memberCount && (
+                            <span className="inline-flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-white">
+                              <Users className="w-4 h-4 mr-2" />
+                              {slide.memberCount} members
+                            </span>
+                          )}
+                          {slide.category && (
+                            <span className="inline-flex items-center bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-white">
+                              {slide.category}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-lg text-white/90 mb-6 line-clamp-2">
+                          {slide.description}
+                        </p>
+
+                        <button className="group inline-flex items-center bg-white text-purple-600 px-6 py-3 rounded-full font-semibold hover:bg-purple-50 transition-colors">
+                          Learn More
+                          <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
-                <h3 className="text-xl font-semibold mb-2">
-                  {slide.title || slide.name}
-                </h3>
-                {slide.date && (
-                  <p className="text-sm text-gray-500 mb-2">{slide.date}</p>
-                )}
-                <p className="text-gray-600 mb-4">{slide.description}</p>
-                
-                <button
-                  onClick={() => handleLearnMore(slide)}
-                  className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Learn More
-                </button>
               </div>
             </div>
           ))}
         </Slider>
       </div>
+
+      <style>{`
+        .custom-dots {
+          bottom: -30px;
+        }
+        .custom-dots li button:before {
+          color: white;
+        }
+      `}</style>
     </section>
   );
 };

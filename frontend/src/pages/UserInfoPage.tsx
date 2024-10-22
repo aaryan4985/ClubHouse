@@ -23,6 +23,8 @@ const UserInfoPage: React.FC = () => {
   const [interests, setInterests] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [hackathonExperience, setHackathonExperience] = useState(''); // New field for hackathon experience
+  const [favoriteTech, setFavoriteTech] = useState(''); // New field for favorite technology
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -40,6 +42,8 @@ const UserInfoPage: React.FC = () => {
             setAddress(data.address || '');
             setInterests(data.interests || '');
             setSelectedLanguages(data.languages || []);
+            setHackathonExperience(data.hackathonExperience || ''); // Load hackathon experience
+            setFavoriteTech(data.favoriteTech || ''); // Load favorite technology
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -84,6 +88,8 @@ const UserInfoPage: React.FC = () => {
           address,
           interests,
           languages: selectedLanguages,
+          hackathonExperience, // Save hackathon experience
+          favoriteTech, // Save favorite technology
         },
         { merge: true }
       );
@@ -96,8 +102,7 @@ const UserInfoPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-300 to-pink-300 text-white p-10">
-
- {/* Light gradient background */}
+      {/* Light gradient background */}
       <h1 className="text-4xl font-extrabold mb-8 text-center text-pink-600">Update Your Profile</h1>
       <form onSubmit={handleUpdate} className="space-y-10">
         <div className="grid gap-6 sm:grid-cols-2">
@@ -191,6 +196,27 @@ const UserInfoPage: React.FC = () => {
             />
           </div>
 
+          <div className="flex flex-col">
+            <label className="mb-2 font-semibold text-pink-600">Hackathon Experience</label>
+            <textarea
+              value={hackathonExperience}
+              onChange={(e) => setHackathonExperience(e.target.value)}
+              className="p-3 rounded-md border border-gray-300 text-purple-600"
+              placeholder="Describe your hackathon experience"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="mb-2 font-semibold text-pink-600">Favorite Technology</label>
+            <input
+              type="text"
+              value={favoriteTech}
+              onChange={(e) => setFavoriteTech(e.target.value)}
+              className="p-3 rounded-md border border-gray-300 text-purple-600"
+              placeholder="Enter your favorite technology"
+            />
+          </div>
+
           {/* Language Selection Blocks */}
           <div className="flex flex-col sm:col-span-2">
             <label className="mb-2 font-semibold text-pink-600">Coding Languages</label>
@@ -202,7 +228,7 @@ const UserInfoPage: React.FC = () => {
                   className={`px-4 py-2 rounded-md cursor-pointer transition ${
                     selectedLanguages.includes(lang.value)
                       ? 'bg-pink-600 text-white'
-                      : 'bg-gray-200 text-black'
+                      : 'bg-gray-200 text-purple-600'
                   }`}
                 >
                   {lang.label}
@@ -211,12 +237,11 @@ const UserInfoPage: React.FC = () => {
             </div>
           </div>
         </div>
-
         <button
           type="submit"
-          className="w-full bg-purple-600 py-3 mt-6 rounded-md font-semibold hover:bg-purple-700 transition"
+          className="w-full py-3 bg-pink-600 text-white rounded-md font-semibold transition hover:bg-pink-700"
         >
-          Save Changes
+          Update Profile
         </button>
       </form>
     </div>

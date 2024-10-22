@@ -1,153 +1,164 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // Adjust the import as necessary
+import { doc, getDoc } from 'firebase/firestore';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import { db } from '../firebase';
+import { Instagram, Linkedin, Twitter, Users, Calendar, Clock } from 'lucide-react';
 
-const firestore = db;
+interface Club {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  leadName: string;
+  leadEmail: string;
+  leadPhone: string;
+  meetingSchedule: string;
+  requirements: string;
+  achievements: string;
+  memberCount: number;
+  establishedDate: string;
+  imageUrl: string;
+  socialMediaLinks?: {
+    instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+  };
+}
 
 const ClubDetailPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
-  const [club, setClub] = useState<any>(null);
-
-  const fetchClubDetails = async (id: string) => {
-    const clubDocRef = doc(collection(firestore, 'clubs'), id);
-    const clubDoc = await getDoc(clubDocRef);
-    if (clubDoc.exists()) {
-      const fetchedClub = { id: clubDoc.id, ...clubDoc.data() };
-      console.log(fetchedClub); // Log to verify the fetched data
-      setClub(fetchedClub);
-    } else {
-      console.error("Club not found");
-    }
-  };
+  const [club, setClub] = useState<Club | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (clubId) {
-      fetchClubDetails(clubId);
-    }
+    const fetchClubDetails = async () => {
+      if (!clubId) {
+        setError('Club ID is missing');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const clubDocRef = doc(db, 'clubs', clubId);
+        const clubDoc = await getDoc(clubDocRef);
+        
+        if (clubDoc.exists()) {
+          const clubData = clubDoc.data() as Omit<Club, 'id'>;
+          const storage = getStorage();
+          let imageUrl = '/placeholder-image.jpg';
+
+          if (clubData.imageUrl) {
+            try {
+              imageUrl = await getDownloadURL(ref(storage, clubData.imageUrl));
+            } catch (imgError) {
+              console.error('Error loading image:', imgError);
+            }
+          }
+
+          setClub({ id: clubDoc.id, ...clubData, imageUrl });
+        } else {
+          setError('Club not found');
+        }
+      } catch (fetchError) {
+        console.error('Error fetching club details:', fetchError);
+        setError('Failed to load club details. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClubDetails();
   }, [clubId]);
 
-  if (!club) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-xl">
-        Loading...
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
       </div>
     );
   }
 
-  const imageUrl = club.logoPath
-    ? `https://firebasestorage.googleapis.com/v0/b/YOUR_PROJECT_ID.appspot.com/o/${encodeURIComponent(
-        club.logoPath
-      )}?alt=media`
-    : ''; // Placeholder URL if logoPath is not defined
+  if (error || !club) {
+    return (
+      <div className="flex justify-center items-center h-screen text-xl text-red-500">
+        {error || 'An unexpected error occurred'}
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-8 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-md">
-      <h1 className="text-6xl font-extrabold text-center mb-4 text-white">
-        {club.name}
-      </h1>
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={`${club.name} logo`}
-          className="w-32 h-32 mx-auto rounded-full border-4 border-white mb-4 mt-3"
-        />
-      ) : (
-        <div className="w-32 h-32 mx-auto rounded-full border-4 border-white mb-4 mt-3 bg-gray-300 flex items-center justify-center">
-          <span className="text-gray-500">No Image Available</span>
-        </div>
-      )}
-      <div className="p-6 rounded-lg shadow-lg mb-4 bg-indigo-100">
-        <p className="text-lg text-indigo-800">
-          <strong>Description:</strong> {club.description}
-        </p>
-        <p className="text-lg text-indigo-800">
-          <strong>Category:</strong> {club.category}
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white">
+      <div className="container mx-auto p-8">
+        <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
+          <div className="flex flex-col md:flex-row items-center mb-8">
+            <img
+              src={club.imageUrl}
+              alt={`${club.name} logo`}
+              className="w-48 h-48 rounded-full border-4 border-white shadow-lg mb-4 md:mb-0 md:mr-8"
+            />
+            <div>
+              <h1 className="text-5xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500">
+                {club.name}
+              </h1>
+              <p className="text-xl text-pink-300 mb-4">{club.category}</p>
+              <div className="flex space-x-4">
+                {club.socialMediaLinks?.instagram && (
+                  <a href={club.socialMediaLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-white hover:text-pink-300 transition-colors">
+                    <Instagram size={24} />
+                  </a>
+                )}
+                {club.socialMediaLinks?.linkedin && (
+                  <a href={club.socialMediaLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-300 transition-colors">
+                    <Linkedin size={24} />
+                  </a>
+                )}
+                {club.socialMediaLinks?.twitter && (
+                  <a href={club.socialMediaLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">
+                    <Twitter size={24} />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Lead Name:</p>
-          <p className="text-indigo-600">{club.leadName}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Lead Email:</p>
-          <p className="text-indigo-600">{club.leadEmail}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Lead Phone:</p>
-          <p className="text-indigo-600">{club.leadPhone}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Meeting Schedule:</p>
-          <p className="text-indigo-600">{club.meetingSchedule}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Requirements:</p>
-          <p className="text-indigo-600">{club.requirements}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Achievements:</p>
-          <p className="text-indigo-600">{club.achievements}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Member Count:</p>
-          <p className="text-indigo-600">{club.memberCount}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow-lg">
-          <p className="font-semibold text-pink-600">Established Date:</p>
-          <p className="text-indigo-600">{club.establishedDate}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="bg-white bg-opacity-20 p-6 rounded-xl shadow-lg transform hover:scale-105 transition-transform">
+              <h2 className="text-2xl font-bold mb-4 text-pink-300">About Us</h2>
+              <p className="text-lg mb-4">{club.description}</p>
+            </div>
+
+            <div className="bg-white bg-opacity-20 p-6 rounded-xl shadow-lg transform hover:scale-105 transition-transform">
+              <h2 className="text-2xl font-bold mb-4 text-pink-300">Club Details</h2>
+              <p className="mb-2 flex items-center"><Users className="mr-2" /> <strong>Lead:</strong> {club.leadName}</p>
+              <p className="mb-2"><strong>Email:</strong> {club.leadEmail}</p>
+              <p className="mb-2"><strong>Phone:</strong> {club.leadPhone}</p>
+              <p className="mb-2 flex items-center"><Clock className="mr-2" /> <strong>Meeting Schedule:</strong> {club.meetingSchedule}</p>
+              <p className="mb-2 flex items-center"><Users className="mr-2" /> <strong>Members:</strong> {club.memberCount}</p>
+              <p className="flex items-center"><Calendar className="mr-2" /> <strong>Established:</strong> {club.establishedDate}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="bg-white bg-opacity-20 p-6 rounded-xl shadow-lg transform hover:scale-105 transition-transform">
+              <h2 className="text-2xl font-bold mb-4 text-pink-300">Requirements</h2>
+              <p className="text-lg">{club.requirements}</p>
+            </div>
+
+            <div className="bg-white bg-opacity-20 p-6 rounded-xl shadow-lg transform hover:scale-105 transition-transform">
+              <h2 className="text-2xl font-bold mb-4 text-pink-300">Achievements</h2>
+              <p className="text-lg">{club.achievements}</p>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <button className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transform hover:scale-105 transition-transform">
+              Join {club.name}
+            </button>
+          </div>
         </div>
       </div>
-
-      <h3 className="text-2xl font-semibold mb-2 text-white">
-        Social Media Links:
-      </h3>
-      <ul className="space-y-2">
-        {club.socialMediaLinks ? (
-          <>
-            {club.socialMediaLinks.instagram && (
-              <li>
-                <a
-                  href={club.socialMediaLinks.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline"
-                >
-                  Instagram
-                </a>
-              </li>
-            )}
-            {club.socialMediaLinks.linkedin && (
-              <li>
-                <a
-                  href={club.socialMediaLinks.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline"
-                >
-                  LinkedIn
-                </a>
-              </li>
-            )}
-            {club.socialMediaLinks.twitter && (
-              <li>
-                <a
-                  href={club.socialMediaLinks.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline"
-                >
-                  Twitter
-                </a>
-              </li>
-            )}
-          </>
-        ) : (
-          <li className="text-gray-300">No Social Media Links Available</li>
-        )}
-      </ul>
     </div>
   );
 };

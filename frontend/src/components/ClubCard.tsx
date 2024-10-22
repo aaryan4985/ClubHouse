@@ -5,14 +5,14 @@ import { Link } from 'react-router-dom';
 interface ClubCardProps {
   name: string;
   description: string;
-  logo: string;
+  imageUrl: string; // This should be the full URL to the logo image
   clubId: string;
 }
 
 const ClubCard: React.FC<ClubCardProps> = ({
   name,
   description,
-  logo,
+  imageUrl,
   clubId,
 }) => {
   const [imgError, setImgError] = useState(false); // State to handle image loading error
@@ -30,8 +30,8 @@ const ClubCard: React.FC<ClubCardProps> = ({
           </div>
         )}
         <img
-          src={imgError ? 'https://via.placeholder.com/150?text=Logo+Not+Found' : logo}
-          alt={`Logo of ${name}`} // Improved alt text
+          src={imgError ? 'https://via.placeholder.com/150?text=Logo+Not+Found' : imageUrl}
+          alt={`imageUrl of ${name}`} // Improved alt text
           className={`h-32 w-32 mx-auto rounded-full border-4 border-indigo-600 mb-6 ${isLoading ? 'hidden' : 'block'}`} // Hide image during loading
           onLoad={() => setIsLoading(false)} // Update loading state when image loads
           onError={() => setImgError(true)} // Handle image load error

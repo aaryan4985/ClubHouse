@@ -66,30 +66,36 @@ const AdminClubsPage: React.FC = () => {
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const fetchClubs = async () => {
+  const getFullImageUrl = async (path: string): Promise<string> => {
+    if (path.startsWith('https://')) {
+      return path;
+    }
+    try {
+      const url = await getDownloadURL(ref(storage, path));
+      return url;
+    } catch (error) {
+      console.error('Error getting download URL:', error);
+      return '/placeholder-image.png';
+    }
+  };
 
+  const fetchClubs = async () => {
     setLoading(true);
     try {
       const snapshot = await getDocs(collection(db, 'clubs'));
       const data = await Promise.all(
         snapshot.docs.map(async (doc) => {
           const club = { id: doc.id, ...doc.data() } as Club;
-          try {
-            const imageUrl = club.logoPath ? 
-              await getDownloadURL(ref(storage, club.logoPath)) : 
-              '/placeholder-image.png';
-            
-            return {
-              ...club,
-              imageUrl
-            };
-          } catch (err) {
-            console.error('Error fetching logo URL:', err);
-            return {
-              ...club,
-              imageUrl: '/placeholder-image.png'
-            };
+          let imageUrl = '/placeholder-image.png';
+          
+          if (club.logoPath) {
+            imageUrl = await getFullImageUrl(club.logoPath);
           }
+          
+          return {
+            ...club,
+            imageUrl
+          };
         })
       );
       setClubs(data);
@@ -170,11 +176,13 @@ const AdminClubsPage: React.FC = () => {
     setLoading(true);
     try {
         let logoPath = '';
+        let imageUrl = '/placeholder-image.png';
 
         if (clubLogo) {
             // Upload the logo to Firebase Storage
             logoPath = `club-logos/${Date.now()}-${clubLogo.name}`;
             await uploadBytes(ref(storage, logoPath), clubLogo);
+            imageUrl = await getFullImageUrl(logoPath);
         }
 
         const clubData: ClubFormData = {
@@ -194,7 +202,7 @@ const AdminClubsPage: React.FC = () => {
             achievements,
             memberCount: parsedMemberCount,
             establishedDate,
-            logoPath, // Save the logo path (URL) here
+            logoPath,
         };
 
         if (editingClubId) {
@@ -216,18 +224,19 @@ const AdminClubsPage: React.FC = () => {
                         console.error('Error deleting old logo:', error);
                     }
                 }
-                await updateDoc(clubRef, clubData);
+                await updateDoc(clubRef, { ...clubData, imageUrl });
             } else {
                 // Update the club data without changing the logo path if no new logo is uploaded
                 await updateDoc(clubRef, {
                     ...clubData,
-                    logoPath: existingClub.data().logoPath, // Retain the old logo path
+                    logoPath: existingClub.data().logoPath,
+                    imageUrl: existingClub.data().imageUrl,
                 });
             }
             setFeedback('Club updated successfully!');
         } else {
             // Add new club
-            await addDoc(collection(db, 'clubs'), clubData);
+            await addDoc(collection(db, 'clubs'), { ...clubData, imageUrl });
             setFeedback('Club added successfully!');
         }
 
@@ -240,7 +249,6 @@ const AdminClubsPage: React.FC = () => {
         setLoading(false);
     }
 };
-
 
   const handleDeleteClub = async (id: string, logoPath: string) => {
     if (!id || !window.confirm('Are you sure you want to delete this club? This action cannot be undone.')) {
@@ -353,55 +361,50 @@ const AdminClubsPage: React.FC = () => {
                 <input type="date" value={establishedDate} onChange={(e) => setEstablishedDate(e.target.value)} className="border rounded w-full p-2" />
               </div>
               <div className="mb-4">
-                <label className="block mb-1">Club Logo <span className="text-red-500">*</span></label>
+                <label className="block mb-1">Club Logo</label>
                 <input type="file" accept="image/*" onChange={handleFileChange} className="border rounded w-full p-2" />
               </div>
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="bg-pink-600 text-white rounded px-4 py-2 hover:bg-purple-600"
+                className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
               >
                 {editingClubId ? 'Update Club' : 'Add Club'}
               </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="bg-gray-500 text-white rounded px-4 py-2 hover:bg-gray-700 ml-2"
-              >
-                Cancel
-              </button>
+              {editingClubId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 ml-2"
+                >
+                  Cancel Edit
+                </button>
+              )}
             </form>
           </div>
           <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-lg font-semibold mb-2">Existing Clubs</h2>
-            {clubs.length === 0 ? (
-              <p>No clubs available.</p>
-            ) : (
-              <ul>
-                {clubs.map((club) => (
-                  <li key={club.id} className="mb-4">
-                    <div className="flex items-center justify-between">
-                      <img src={club.imageUrl} alt={`${club.name} logo`} className="w-16 h-16 rounded mr-4" />
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold">{club.name}</h3>
-                        <p>{club.description}</p>
-                      </div>
-                      <div>
-                        <button onClick={() => handleEditClub(club)} className="bg-yellow-500 text-white rounded px-2 py-1 mr-1">
-                          Edit
-                        </button>
-                        <button 
-                        onClick={() => club.id && handleDeleteClub(club.id, club.logoPath || '')} 
-                        className="bg-red-500 text-white rounded px-2 py-1"
-                        >
-                        Delete
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <h2 className="text-lg font-semibold mb-2 text-pink-600">Existing Clubs</h2>
+            {clubs.map((club) => (
+              <div key={club.id} className="mb-4 p-2 border rounded">
+                <h3 className="font-semibold">{club.name}</h3>
+                <p>{club.description}</p>
+                <img src={club.imageUrl} alt={club.name} className="w-20 h-20 object-cover mt-2" />
+                <div className="mt-2">
+                  <button
+                    onClick={() => handleEditClub(club)}
+                    className="bg-blue-500 text-white px-2 py-1 rounded mr-2 hover:bg-blue-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClub(club.id!, club.logoPath)}
+                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

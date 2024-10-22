@@ -52,8 +52,8 @@ const EventsPage: React.FC = () => {
   );
 
   return (
-    <div className="p-8">
-      <h2 className="text-4xl font-bold text-center text-gradient mb-6">Events</h2>
+    <div className="p-12 bg-pink-200">
+      <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-center">Events</h2>
       {events.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
           {events.map(event => (
@@ -62,7 +62,7 @@ const EventsPage: React.FC = () => {
               id={event.id}
               title={event.title}
               date={new Date(event.date).toLocaleDateString()}
-              image={event.image || 'https://example.com/default-event-image.jpg'} // Default image URL
+              imagePath={event.imagePath || 'https://example.com/default-event-image.jpg'} // Default image URL
               description={event.description}
             />
           ))}

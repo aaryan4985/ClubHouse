@@ -42,7 +42,7 @@ const ClubsPage: React.FC = () => {
   if (error) return <div className="text-center text-red-500">{error}</div>;
 
   return (
-    <div className="p-10">
+    <div className="p-10 bg-pink-200">
       <h2 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent animate-gradient bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-center ">Clubs</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
         {clubs.length > 0 ? (
@@ -52,7 +52,7 @@ const ClubsPage: React.FC = () => {
               clubId={club.id}
               name={club.name}
               description={club.description}
-              logo={club.logo || 'https://via.placeholder.com/150?text=Logo+Not+Found'} // Fallback logo
+              imageUrl={club.imageUrl || 'https://via.placeholder.com/150?text=Logo+Not+Found'} // Fallback logo
             />
           ))
         ) : (

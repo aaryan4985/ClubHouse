@@ -5,15 +5,42 @@ export interface Event {
   title: string;
   description: string;
   date: string;
-  image?: string;
+  imagePath?: string;
 }
   
   export interface Club {
     id: string;
     name: string;
     description: string;
-    logo?: string; // Optional, if applicable
+    imageUrl?: string; // Optional, if applicable
     members?: { id: string; name: string }[]; // Optional: Array of member objects
-    image?: string;
   }
+
+  
+export interface EventCardProps {
+
+  event: {
+
+    id: string;
+
+    name: string;
+
+    description: string;
+
+    venue: string;
+
+    timing: string;
+
+    date: string;
+
+    imagePath?: string;
+
+    rules: string;
+
+  };
+
+  onClick: () => void;
+
+}
+
   

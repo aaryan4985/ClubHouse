@@ -12,8 +12,8 @@ import AdminEventsPage from './pages/AdminEventsPage';  // New Page for Events A
 import ClubDetailPage from './pages/ClubDetailPage';
 import EventDetailPage from './pages/EventDetailPage';
 import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import RegisterPage from './pages/RegistrationPage'; // New Register Page
+import SignUpPage from './pages/SignUpPage';// Import TeamFinderPage
+
 import ProfilePage from './pages/ProfilePage';
 import UserInfoPage from './pages/UserInfoPage'; 
 import Layout from './components/Layout';
@@ -61,7 +61,7 @@ const App: React.FC = () => {
               <Route path="/" element={<Layout><HomePage /></Layout>} />
               <Route path="/clubs" element={<Layout><ClubsPage /></Layout>} />
               <Route path="/events" element={<Layout><EventsPage /></Layout>} />
-              
+
               {/* Admin Pages */}
               <Route path="/admin" element={<PrivateRoute element={<Layout><AdminPage /></Layout>} />} />
               <Route path="/admin/clubs" element={<PrivateRoute element={<Layout><AdminClubsPage /></Layout>} />} />
@@ -74,7 +74,6 @@ const App: React.FC = () => {
               {/* Auth Pages */}
               <Route path="/login" element={<Layout><LoginPage /></Layout>} />
               <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
-              <Route path="/register/:eventId" element={<PrivateRoute element={<Layout><RegisterPage /></Layout>} />} /> {/* New Registration Route */}
               <Route path="/profile" element={<PrivateRoute element={<Layout><ProfilePage /></Layout>} />} />
               <Route path="/userinfo" element={<PrivateRoute element={<Layout><UserInfoPage /></Layout>} />} />
 
