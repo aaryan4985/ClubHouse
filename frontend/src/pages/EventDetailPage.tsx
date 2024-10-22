@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Instagram, Linkedin, Twitter, Clock, MapPin, Calendar, Share2, ArrowLeft, Users } from 'lucide-react';
+import { Instagram, Linkedin, Twitter, Clock, MapPin, Calendar, Share2, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from "../components/ui/alert";
 
 interface Event {
@@ -13,7 +13,7 @@ interface Event {
   venue: string;
   timing: string;
   date: string;
-  imagePath?: string; // Updated from imagepath to imagePath
+  imagePath?: string;
   registeredUsers?: string[];
   socialMediaLinks?: {
     instagram?: string;
@@ -247,94 +247,65 @@ const EventDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Description */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-4">About the Event</h2>
-              <p className="text-white/90 leading-relaxed">{event.description}</p>
-            </div>
+            {/* Description Section */}
+            <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
+            <p className="text-white/80 mb-8">{event.description}</p>
 
-            {/* Rules */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-4">Event Rules</h2>
-              <div className="bg-white/5 rounded-xl p-6">
-                <p className="text-white/90 whitespace-pre-line">{event.rules}</p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={handleRegisterClick}
-                disabled={isRegistered}
-                className={`${
-                  isRegistered
-                    ? 'bg-green-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
-                } text-white px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105 flex items-center`}
-              >
-                {isRegistered ? 'Already Registered' : 'Register Now'}
-              </button>
-              
-              {/* Team Finder Button - Only show if registered */}
-              {isRegistered && (
-                <button
-                  onClick={handleFindTeam}
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 
-                           text-white px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105 
-                           flex items-center"
-                >
-                  <Users className="mr-2" />
-                  Find Team
-                </button>
-              )}
-              
-              <button
-                onClick={handleShare}
-                className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-full font-semibold transition-all flex items-center"
-              >
-                <Share2 className="mr-2" />
-                Share Event
-              </button>
-            </div>
+            {/* Rules Section */}
+            <h2 className="text-2xl font-bold text-white mb-4">Rules</h2>
+            <p className="text-white/80 mb-8">{event.rules}</p>
 
             {/* Social Media Links */}
             {event.socialMediaLinks && (
-              <div className="mt-8 pt-8 border-t border-white/10">
-                <h2 className="text-xl font-bold text-white mb-4">Follow Us</h2>
-                <div className="flex gap-4">
-                  {event.socialMediaLinks.instagram && (
-                    <a
-                      href={event.socialMediaLinks.instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-pink-400 transition-colors"
-                    >
-                      <Instagram size={24} />
-                    </a>
-                  )}
-                  {event.socialMediaLinks.linkedin && (
-                    <a
-                      href={event.socialMediaLinks.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-blue-400 transition-colors"
-                    >
-                      <Linkedin size={24} />
-                    </a>
-                  )}
-                  {event.socialMediaLinks.twitter && (
-                    <a
-                      href={event.socialMediaLinks.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-sky-400 transition-colors"
-                    >
-                      <Twitter size={24} />
-                    </a>
-                  )}
-                </div>
+              <div className="flex gap-4 mb-8">
+                {event.socialMediaLinks.instagram && (
+                  <a href={event.socialMediaLinks.instagram} target="_blank" rel="noopener noreferrer">
+                    <Instagram className="w-8 h-8 text-white hover:text-purple-300 transition-colors" />
+                  </a>
+                )}
+                {event.socialMediaLinks.linkedin && (
+                  <a href={event.socialMediaLinks.linkedin} target="_blank" rel="noopener noreferrer">
+                    <Linkedin className="w-8 h-8 text-white hover:text-purple-300 transition-colors" />
+                  </a>
+                )}
+                {event.socialMediaLinks.twitter && (
+                  <a href={event.socialMediaLinks.twitter} target="_blank" rel="noopener noreferrer">
+                    <Twitter className="w-8 h-8 text-white hover:text-purple-300 transition-colors" />
+                  </a>
+                )}
               </div>
             )}
+
+            {/* Register Button */}
+            {!isRegistered ? (
+              <button
+                onClick={handleRegisterClick}
+                className="bg-pink-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-pink-700 transition-colors mb-4"
+              >
+                Register
+              </button>
+            ) : (
+              <p className="text-green-400 font-bold mb-4">You are already registered!</p>
+            )}
+
+            {/* Find Team Button */}
+            {isRegistered && (
+              <button
+                onClick={handleFindTeam}
+                className="bg-purple-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Find a Team
+              </button>
+            )}
+
+            {/* Share Event Button */}
+            <button
+              onClick={handleShare}
+              className="bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors mt-4"
+            >
+              <Share2 className="inline-block mr-2" />
+              Share Event
+            </button>
           </div>
         </div>
       </div>

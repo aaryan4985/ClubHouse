@@ -1,21 +1,23 @@
+
 // src/App.tsx
 import React, { useEffect, useState, Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase'; // Firebase auth import
+import { auth } from './firebase';
 import HomePage from './pages/HomePage';
 import ClubsPage from './pages/ClubsPage';
 import EventsPage from './pages/EventsPage';
-import AdminPage from './pages/AdminPage'; 
-import AdminClubsPage from './pages/AdminClubsPage';  // New Page for Clubs Admin
-import AdminEventsPage from './pages/AdminEventsPage';  // New Page for Events Admin
+import AdminPage from './pages/AdminPage';
+import AdminClubsPage from './pages/AdminClubsPage';
+import AdminEventsPage from './pages/AdminEventsPage';
 import ClubDetailPage from './pages/ClubDetailPage';
 import EventDetailPage from './pages/EventDetailPage';
 import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';// Import TeamFinderPage
-
+import SignUpPage from './pages/SignUpPage';
+import TeamFinderPage from './pages/TeamFinderPage';
 import ProfilePage from './pages/ProfilePage';
-import UserInfoPage from './pages/UserInfoPage'; 
+import UserInfoPage from './pages/UserInfoPage';
+import ResumeBuilderPage from './pages/ResumeBuilder'; // New import
 import Layout from './components/Layout';
 import NotFound from './components/NotFound';
 import { AuthProvider } from './context/AuthContext';
@@ -25,8 +27,9 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './styles.css';
 import ClubChatPage from './pages/ClubChatPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
-// PrivateRoute Component to guard protected routes
+// PrivateRoute Component remains the same
 const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
@@ -37,7 +40,7 @@ const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
     return () => unsubscribe();
   }, []);
 
-  if (isAuthenticated === null) return <Spinner />; // Custom loading spinner or fallback
+  if (isAuthenticated === null) return <Spinner />;
 
   return isAuthenticated ? element : <Navigate to="/login" replace />;
 };
@@ -51,7 +54,7 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  if (isLoading) return <Spinner />; // Use your loading spinner or animation
+  if (isLoading) return <Spinner />;
 
   return (
     <Router>
@@ -72,12 +75,17 @@ const App: React.FC = () => {
               <Route path="/clubs/:clubId" element={<Layout><ClubDetailPage /></Layout>} />
               <Route path="/events/:eventId" element={<Layout><EventDetailPage /></Layout>} />
               <Route path="/clubs/:clubId/chat" element={<ClubChatPage />} />
+              <Route path="/events/:eventId/team-finder" element={<TeamFinderPage />} />
+
+              {/* Resume Builder Page - Protected Route */}
+              <Route path="/resume-builder" element={<PrivateRoute element={<Layout><ResumeBuilderPage /></Layout>} />} />
 
               {/* Auth Pages */}
               <Route path="/login" element={<Layout><LoginPage /></Layout>} />
               <Route path="/signup" element={<Layout><SignUpPage /></Layout>} />
               <Route path="/profile" element={<PrivateRoute element={<Layout><ProfilePage /></Layout>} />} />
               <Route path="/userinfo" element={<PrivateRoute element={<Layout><UserInfoPage /></Layout>} />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
 
               {/* 404 Not Found */}
               <Route path="*" element={<Layout><NotFound /></Layout>} />

@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, getAuth, User } from 'firebase/auth';
-import Sidebar from './Sidebar'; // Assuming you have a Sidebar component
-import { app } from '../firebase'; // Your Firebase app configuration
+import Sidebar from './Sidebar';
+import { app } from '../firebase';
 
 interface HeaderProps {
   currentUser: User | null;
@@ -37,6 +37,18 @@ const Header: React.FC<HeaderProps> = ({ currentUser, handleLogout }) => {
         <Link to="/clubs" className="text-lg font-semibold text-white hover:scale-110 hover:text-gray-200 transition-transform duration-300">
           Clubs
         </Link>
+        
+        {/* New Leaderboard Link */}
+        <Link to="/leaderboard" className="text-lg font-semibold text-white hover:scale-110 hover:text-gray-200 transition-transform duration-300">
+          Leaderboard
+        </Link>
+        
+        {/* Resume Builder Link - Only shown when user is logged in */}
+        {currentUser && (
+          <Link to="/resume-builder" className="text-lg font-semibold text-white hover:scale-110 hover:text-gray-200 transition-transform duration-300">
+            Resume Builder
+          </Link>
+        )}
 
         {!currentUser ? (
           <>
