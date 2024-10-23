@@ -10,7 +10,6 @@ const Footer = () => {
           <Link to="/" className="footer-link">Home</Link>
           <Link to="/events" className="footer-link">Events</Link>
           <Link to="/clubs" className="footer-link">Clubs</Link>
-          <Link to="/about" className="footer-link">About Us</Link>
         </div>
         <p className="text-sm">&copy; 2024 Clubhouse. All Rights Reserved.</p>
       </div>

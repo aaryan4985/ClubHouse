@@ -1,4 +1,3 @@
-// SignUpPage.tsx
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -14,7 +13,8 @@ const SignUpPage: React.FC = () => {
     e.preventDefault();
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/');
+      // Navigate to User Info page after successful signup
+      navigate('/userinfo');
     } catch (err) {
       setError('Sign-up failed. Please try again.');
     }
@@ -24,7 +24,8 @@ const SignUpPage: React.FC = () => {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      navigate('/');
+      // Navigate to User Info page after Google signup
+      navigate('/userinfo');
     } catch (err) {
       setError('Google sign-up failed. Please try again.');
     }
@@ -57,7 +58,7 @@ const SignUpPage: React.FC = () => {
           </button>
           {error && <p className="text-red-500 text-center">{error}</p>}
         </form>
-        
+
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
